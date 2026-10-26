@@ -1,10 +1,16 @@
 {
   "id": "meow",
   "name": "MEOW",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Drive the MEOW harness from Sandflow: describe a feature and MEOW plans, builds, tests and reviews it in its own worktree, then opens the MR. Also plan, review, multi-task sprints and Jira issues.",
   "author": "Ofek Tal",
   "homepage": "https://github.com/maya8237/MEOW",
   "license": "MIT",
-  "requires": [{ "id": "base", "version": "^1.0.0", "source": "https://github.com/kafuexe/sandflow-base-boxes" }]
+  "requires": [
+    {
+      "id": "base",
+      "version": "^1.0.0",
+      "source": "https://github.com/kafuexe/sandflow-base-boxes"
+    }
+  ]
 }

@@ -14,11 +14,23 @@ login, in its own worktree of `REPO_PATH`.
 | MEOW: multi-task sprint → MR | `meow run --orchestrate "<input>"` | `delivered` · `mr-not-opened` · `failed` |
 | MEOW: Jira issue → MR | `meow run --jira [KEY]` | `delivered` · `mr-not-opened` · `failed` |
 | MEOW: run status | `meow status --verbose` | `found` · `none` |
+| MEOW: any command | `meow <whatever you type>` | `done` · `failed` |
 
 `<input>` is the block's incoming artifact, or the starting prompt when there is none (or it comes straight from
 *Manual start*). Options on the node's Block tab become MEOW flags: workflow (your custom MEOW workflows are listed
 when you press reload next to it), feature name, MR target, start branch, in-place delivery, tester, plan file and
 workflow inputs.
+
+## Newer MEOW versions
+
+The pack doesn't pin a MEOW version — the blocks call whatever `meow` you have installed, so `meow --update` needs
+no pack update:
+
+- **New flags**: every block has *Extra MEOW arguments*, passed to `meow` as typed (e.g. `--some-new-flag 2`).
+- **New commands**: *MEOW: any command* runs `meow <anything>`.
+- **New workflows, scopes, …**: every list also takes a typed-in value, and *Workflow* lists your installed MEOW's
+  workflows when you press reload.
+- **New exit codes** go out through the block's `failed` / `fail` exit (with a warning) instead of breaking the run.
 
 Flows: **MEOW: feature → MR** (press Run) and **MEOW: GitHub issue → MR** (a new issue → MEOW → comment back).
 

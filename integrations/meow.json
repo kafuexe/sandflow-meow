@@ -56,7 +56,8 @@
           "args": [
             "--workflow",
             "{{value}}"
-          ]
+          ],
+          "allowCustom": true
         },
         {
           "id": "from",
@@ -112,7 +113,8 @@
           "placeholder": "own worktree → MR",
           "args": [
             "{{value}}"
-          ]
+          ],
+          "allowCustom": true
         },
         {
           "id": "test",
@@ -227,7 +229,8 @@
           "args": [
             "--scope",
             "{{value}}"
-          ]
+          ],
+          "allowCustom": true
         },
         {
           "id": "fix",
@@ -417,6 +420,44 @@
       "failExit": "none",
       "artifact": "{{stdout}}\n{{stderr}}",
       "timeoutSeconds": 120
+    },
+    {
+      "id": "command",
+      "name": "MEOW: any command",
+      "description": "Runs any meow command in REPO_PATH, e.g. a new one this pack doesn't have a block for yet (meow <command>). Its output is the artifact.",
+      "icon": "terminal",
+      "inputs": {
+        "artifact": false,
+        "startingPrompt": false
+      },
+      "args": [
+        "{{option.command}}"
+      ],
+      "options": [
+        {
+          "id": "command",
+          "label": "Command",
+          "type": "args",
+          "required": true,
+          "placeholder": "worktree list --work-dir .",
+          "description": "Everything after meow. Use --work-dir . for commands that take it (it runs in REPO_PATH)."
+        }
+      ],
+      "exitCodes": {
+        "0": "done"
+      },
+      "failExit": "failed",
+      "artifact": "{{stdout}}",
+      "timeoutSeconds": 21600
+    }
+  ],
+  "options": [
+    {
+      "id": "extra",
+      "label": "Extra MEOW arguments",
+      "type": "args",
+      "placeholder": "--some-new-flag value",
+      "description": "Any other meow flags, passed as typed, including ones newer MEOW versions add."
     }
   ]
 }
