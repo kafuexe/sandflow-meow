@@ -1,0 +1,23 @@
+{
+  "id": "meow-issue-to-mr",
+  "name": "MEOW: GitHub issue → MR",
+  "description": "A new GitHub issue goes to MEOW, which builds it and opens the MR; the result is posted back on the issue.",
+  "color": "amber",
+  "nodes": [
+    {
+      "id": "issue",
+      "type": "block",
+      "position": { "x": 0, "y": 0 },
+      "data": { "blockId": "base/github-trigger", "label": "New issue", "overrides": { "trigger": { "events": ["issue.opened"] } } }
+    },
+    { "id": "meow", "type": "block", "position": { "x": 320, "y": 0 }, "data": { "blockId": "meow-run" } },
+    { "id": "done", "type": "block", "position": { "x": 680, "y": -120 }, "data": { "blockId": "base/post-comment", "label": "Comment: MR opened" } },
+    { "id": "failed", "type": "block", "position": { "x": 680, "y": 120 }, "data": { "blockId": "base/post-comment", "label": "Comment: didn't make it" } }
+  ],
+  "edges": [
+    { "id": "e-issue-meow", "source": "issue", "target": "meow", "sourceHandle": "artifact", "targetHandle": "artifact" },
+    { "id": "e-meow-done", "source": "meow", "target": "done", "sourceHandle": "exit:delivered", "targetHandle": "artifact" },
+    { "id": "e-meow-nomr", "source": "meow", "target": "done", "sourceHandle": "exit:mr-not-opened", "targetHandle": "artifact" },
+    { "id": "e-meow-failed", "source": "meow", "target": "failed", "sourceHandle": "exit:failed", "targetHandle": "artifact" }
+  ]
+}

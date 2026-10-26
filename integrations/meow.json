@@ -1,0 +1,422 @@
+{
+  "id": "meow",
+  "name": "MEOW",
+  "description": "MEOW plans, builds, tests and reviews a whole feature in its own worktree, then pushes the branch and opens an MR.",
+  "homepage": "https://github.com/maya8237/MEOW",
+  "icon": "cat",
+  "color": "#f59e0b",
+  "command": "meow",
+  "detect": {
+    "args": [
+      "--version"
+    ],
+    "pattern": "meow\\s+v?(\\S+)"
+  },
+  "install": {
+    "url": "https://github.com/maya8237/MEOW/blob/main/docs/INSTALL.md",
+    "notes": "Needs Python 3.12+ and Claude Code signed in. Open a new terminal (or restart Sandflow) afterwards so meow is on PATH. Optional: run /meow:onboard in your project to set up lint, tests and integrations; a first run sets up the basics by itself.",
+    "commands": {
+      "win32": "irm https://raw.githubusercontent.com/maya8237/MEOW/main/scripts/install.ps1 | iex",
+      "default": "curl -fsSL https://raw.githubusercontent.com/maya8237/MEOW/main/scripts/install.sh | sh"
+    }
+  },
+  "env": [
+    "REPO_PATH"
+  ],
+  "actions": [
+    {
+      "id": "run",
+      "name": "MEOW: feature → MR",
+      "description": "Plans, implements, reviews and checks the feature in a MEOW worktree, then pushes and opens an MR (meow run). Exits: delivered, mr-not-opened (pushed, but no MR could be opened) or failed.",
+      "args": [
+        "run",
+        "{{input}}",
+        "--work-dir",
+        "{{env.REPO_PATH}}"
+      ],
+      "options": [
+        {
+          "id": "workflow",
+          "label": "Workflow",
+          "type": "select",
+          "description": "default = plan → tasks → generate/verify/review loop → checks → MR. quick = short plan, at most 3 rounds. Reload to list your custom workflows.",
+          "choices": [
+            "default",
+            "quick"
+          ],
+          "choicesFrom": {
+            "args": [
+              "workflows",
+              "list",
+              "--work-dir",
+              "{{env.REPO_PATH}}"
+            ],
+            "pattern": "^([a-z0-9][\\w-]*) \\([^)]*\\): (.*)$"
+          },
+          "args": [
+            "--workflow",
+            "{{value}}"
+          ]
+        },
+        {
+          "id": "from",
+          "label": "Start from branch",
+          "type": "string",
+          "placeholder": "current branch",
+          "description": "Branch the new worktree starts from (--from). Not the MR target.",
+          "args": [
+            "--from",
+            "{{value}}"
+          ]
+        },
+        {
+          "id": "name",
+          "label": "Feature name",
+          "type": "string",
+          "placeholder": "derived from the request",
+          "description": "Names the worktree and branch (--name).",
+          "args": [
+            "--name",
+            "{{value}}"
+          ]
+        },
+        {
+          "id": "target",
+          "label": "MR target branch",
+          "type": "string",
+          "placeholder": "[delivery].target_branch",
+          "args": [
+            "--target",
+            "{{value}}"
+          ]
+        },
+        {
+          "id": "delivery",
+          "label": "Where it works",
+          "type": "select",
+          "description": "A MEOW worktree it commits, pushes and opens an MR from (the default), or REPO_PATH itself.",
+          "choices": [
+            {
+              "value": "--no-worktree",
+              "label": "in REPO_PATH, no commit"
+            },
+            {
+              "value": "--no-worktree-commit",
+              "label": "in REPO_PATH, commit only"
+            },
+            {
+              "value": "--no-worktree-push",
+              "label": "in REPO_PATH, commit and push"
+            }
+          ],
+          "placeholder": "own worktree → MR",
+          "args": [
+            "{{value}}"
+          ]
+        },
+        {
+          "id": "test",
+          "label": "Run the tester after review",
+          "type": "boolean",
+          "args": [
+            "--test"
+          ]
+        },
+        {
+          "id": "noTests",
+          "label": "Skip tests (keep lint and build)",
+          "type": "boolean",
+          "args": [
+            "--force-disable-tests"
+          ]
+        },
+        {
+          "id": "plan",
+          "label": "Existing plan file",
+          "type": "string",
+          "placeholder": ".meow/plans/….md",
+          "args": [
+            "--plan",
+            "{{value}}"
+          ]
+        },
+        {
+          "id": "input",
+          "label": "Workflow input",
+          "type": "string",
+          "placeholder": "name=value",
+          "description": "Passed as --input to custom workflows.",
+          "args": [
+            "--input",
+            "{{value}}"
+          ]
+        }
+      ],
+      "exitCodes": {
+        "0": "delivered",
+        "3": "mr-not-opened"
+      },
+      "failExit": "failed",
+      "matches": {
+        "mr": "(https?://\\S+/(?:pull|merge_requests)/\\d+)"
+      },
+      "timeoutSeconds": 21600
+    },
+    {
+      "id": "plan",
+      "name": "MEOW: plan",
+      "description": "Writes a sprint plan for the request without implementing it (meow plan). The plan lands in .meow/plans/.",
+      "icon": "list-checks",
+      "args": [
+        "plan",
+        "{{input}}",
+        "--work-dir",
+        "{{env.REPO_PATH}}"
+      ],
+      "options": [
+        {
+          "id": "from",
+          "label": "Start from branch",
+          "type": "string",
+          "placeholder": "current branch",
+          "description": "Branch the new worktree starts from (--from). Not the MR target.",
+          "args": [
+            "--from",
+            "{{value}}"
+          ]
+        },
+        {
+          "id": "name",
+          "label": "Feature name",
+          "type": "string",
+          "placeholder": "derived from the request",
+          "args": [
+            "--name",
+            "{{value}}"
+          ]
+        }
+      ],
+      "exitCodes": {
+        "0": "done"
+      },
+      "failExit": "failed",
+      "timeoutSeconds": 3600
+    },
+    {
+      "id": "review",
+      "name": "MEOW: review",
+      "description": "Reviews existing code against the request (meow review) and, with Fix findings, fixes what it finds. Exits pass or fail.",
+      "icon": "search-check",
+      "args": [
+        "review",
+        "{{input}}",
+        "--work-dir",
+        "{{env.REPO_PATH}}"
+      ],
+      "options": [
+        {
+          "id": "scope",
+          "label": "Scope",
+          "type": "select",
+          "choices": [
+            "auto",
+            "diff",
+            "project"
+          ],
+          "placeholder": "auto",
+          "args": [
+            "--scope",
+            "{{value}}"
+          ]
+        },
+        {
+          "id": "fix",
+          "label": "Fix findings",
+          "type": "boolean",
+          "args": [
+            "--fix"
+          ]
+        },
+        {
+          "id": "branch",
+          "label": "Review branch",
+          "type": "string",
+          "placeholder": "the checked-out code",
+          "description": "Review this branch against the target (--branch).",
+          "args": [
+            "--branch",
+            "{{value}}"
+          ]
+        },
+        {
+          "id": "target",
+          "label": "Against target",
+          "type": "string",
+          "args": [
+            "--target",
+            "{{value}}"
+          ]
+        },
+        {
+          "id": "github",
+          "label": "GitHub PR URL",
+          "type": "string",
+          "args": [
+            "--github",
+            "{{value}}"
+          ]
+        },
+        {
+          "id": "gitlab",
+          "label": "GitLab MR URL",
+          "type": "string",
+          "args": [
+            "--gitlab",
+            "{{value}}"
+          ]
+        }
+      ],
+      "exitCodes": {
+        "0": "pass"
+      },
+      "failExit": "fail",
+      "timeoutSeconds": 10800
+    },
+    {
+      "id": "orchestrate",
+      "name": "MEOW: multi-task sprint → MR",
+      "description": "Splits a bigger objective into tasks, runs them as parallel sprints and delivers them in one MR (meow run --orchestrate).",
+      "icon": "split",
+      "args": [
+        "run",
+        "--orchestrate",
+        "{{input}}",
+        "--work-dir",
+        "{{env.REPO_PATH}}"
+      ],
+      "options": [
+        {
+          "id": "from",
+          "label": "Start from branch",
+          "type": "string",
+          "placeholder": "current branch",
+          "description": "Branch the new worktree starts from (--from). Not the MR target.",
+          "args": [
+            "--from",
+            "{{value}}"
+          ]
+        },
+        {
+          "id": "maxParallel",
+          "label": "Sprints at once",
+          "type": "number",
+          "placeholder": "3",
+          "args": [
+            "--max-parallel",
+            "{{value}}"
+          ]
+        },
+        {
+          "id": "target",
+          "label": "MR target branch",
+          "type": "string",
+          "args": [
+            "--target",
+            "{{value}}"
+          ]
+        },
+        {
+          "id": "noMr",
+          "label": "Push without opening an MR",
+          "type": "boolean",
+          "args": [
+            "--no-mr"
+          ]
+        },
+        {
+          "id": "test",
+          "label": "Run the tester in each sprint",
+          "type": "boolean",
+          "args": [
+            "--test"
+          ]
+        }
+      ],
+      "exitCodes": {
+        "0": "delivered",
+        "3": "mr-not-opened"
+      },
+      "failExit": "failed",
+      "matches": {
+        "mr": "(https?://\\S+/(?:pull|merge_requests)/\\d+)"
+      },
+      "timeoutSeconds": 43200
+    },
+    {
+      "id": "jira",
+      "name": "MEOW: Jira issue → MR",
+      "description": "Fetches a Jira issue (or the latest in [jira].project_key) and builds it end to end (meow run --jira). Needs MEOW's Jira setup.",
+      "icon": "flag",
+      "inputs": {
+        "artifact": false,
+        "startingPrompt": false
+      },
+      "args": [
+        "run",
+        "--jira",
+        "{{option.key}}",
+        "--work-dir",
+        "{{env.REPO_PATH}}"
+      ],
+      "options": [
+        {
+          "id": "key",
+          "label": "Issue key",
+          "type": "string",
+          "placeholder": "latest issue",
+          "description": "e.g. PROJ-123"
+        }
+      ],
+      "exitCodes": {
+        "0": "delivered",
+        "3": "mr-not-opened"
+      },
+      "failExit": "failed",
+      "matches": {
+        "mr": "(https?://\\S+/(?:pull|merge_requests)/\\d+)"
+      },
+      "timeoutSeconds": 21600
+    },
+    {
+      "id": "status",
+      "name": "MEOW: run status",
+      "description": "What the latest (or a named) MEOW run did: phase, checks, review, delivery and cost (meow status --verbose).",
+      "icon": "file-text",
+      "inputs": {
+        "artifact": false,
+        "startingPrompt": false
+      },
+      "args": [
+        "status",
+        "{{option.runId}}",
+        "--verbose",
+        "--work-dir",
+        "{{env.REPO_PATH}}"
+      ],
+      "options": [
+        {
+          "id": "runId",
+          "label": "Run id",
+          "type": "string",
+          "placeholder": "latest run"
+        }
+      ],
+      "exitCodes": {
+        "0": "found"
+      },
+      "failExit": "none",
+      "artifact": "{{stdout}}\n{{stderr}}",
+      "timeoutSeconds": 120
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "id": "meow-feature",
+  "name": "MEOW: feature → MR",
+  "description": "Press Run with a feature in the starting prompt: MEOW plans, builds, reviews and checks it, then opens the MR.",
+  "color": "amber",
+  "nodes": [
+    { "id": "start", "type": "block", "position": { "x": 0, "y": 0 }, "data": { "blockId": "base/manual-trigger" } },
+    { "id": "meow", "type": "block", "position": { "x": 320, "y": 0 }, "data": { "blockId": "meow-run" } }
+  ],
+  "edges": [{ "id": "e-start-meow", "source": "start", "target": "meow", "sourceHandle": "artifact", "targetHandle": "artifact" }]
+}
